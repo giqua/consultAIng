@@ -28,7 +28,7 @@ class ConsultAIAgent:
         logger.info(f"Processing message: {message[:50]}...")  # Log first 50 chars of message
         try:
             response = self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model=os.environ["OPENAI_MODEL"],
                 messages=[
                     {"role": "system", "content": "You are a helpful AI assistant for software developers."},
                     {"role": "user", "content": message}
