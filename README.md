@@ -17,11 +17,9 @@ ConsultAIng is an innovative AI-driven assistant designed to seamlessly integrat
 
 ## Project Structure
 
-- `backend/`: FastAPI backend service
-- `frontend/`: React frontend application
-- `ai/`: AI/ML models and related code
-- `infrastructure/`: Docker configurations and deployment scripts
-- `docs/`: Project documentation
+- `agent/`: Core AI agent functionality
+- `chat_integration/`: Slack bot integration
+- `tests/`: Unit and integration tests
 
 ## Getting Started
 
