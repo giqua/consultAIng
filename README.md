@@ -28,7 +28,6 @@ ConsultAIng is an innovative AI-driven assistant designed to seamlessly integrat
     git clone https://github.com/giqua/consultAIng.git cd ConsultAIng
     ```
 
-
 2. Create a virtual environment and install dependencies:
     ``` bash
     python -m venv venv source venv/bin/activate
@@ -41,25 +40,40 @@ ConsultAIng is an innovative AI-driven assistant designed to seamlessly integrat
     - Copy the contents of `slack_manifest.yaml` into the manifest editor
     - Review and create the app
 
-4. Install the app to your workspace:
-    - After creating the app, go to "Install App" in the sidebar
+4. Configure App Home and Permissions:
+    - In your Slack App settings, go to "App Home"
+    - Enable the "Messages Tab" and allow users to send messages
+    - In "OAuth & Permissions", ensure you have the following scopes:
+        - app_mentions:read
+        - chat:write
+        - im:history
+        - im:read
+        - im:write
+5. Install the app to your workspace:
+    - Go to "Install App" in the sidebar
     - Click "Install to Workspace" and authorize the app
 
-5. Get your app tokens:
+6. Get your app tokens:
     - In "OAuth & Permissions", copy the "Bot User OAuth Token"
     - In "Basic Information" > "App-Level Tokens", create a new token with the `connections:write` scope
     - Copy the generated App-Level Token
 
-5. Set up OpenAI API:
+7. Set up OpenAI API:
     - Go to https://platform.openai.com/ and create an account
     - Generate an API key
 
-6. Create a `.env` file in the project root with the following content:
+8. Create a `.env` file in the project root with the following content:
     ``` .env
-    OPENAI_API_KEY=your_openai_api_key 
-    SLACK_BOT_TOKEN=your_slack_bot_token 
-    SLACK_APP_TOKEN=your_slack_app_token
+    OPENAI_API_KEY=sk-.... 
+    SLACK_BOT_TOKEN=xoxb-.... 
+    SLACK_APP_TOKEN=xapp-....
     ```
+
+9. Run the Slack bot:
+    ``` bash
+    python run_agent.py
+    ```
+
 ## Usage
 
 - In Slack, invite the bot to a channel
@@ -69,6 +83,11 @@ ConsultAIng is an innovative AI-driven assistant designed to seamlessly integrat
 ## Extending the Bot
 
 To add new features or modify the bot's behavior, edit the `agent/core.py` and `chat_integration/slack_bot.py` files.
+The current implementation includes:
+
+- Processing mentions and direct messages
+- Generating responses using OpenAI's GPT model
+- Basic error handling and logging
 
 ## Contributing
 
