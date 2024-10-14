@@ -25,7 +25,52 @@ ConsultAIng is an innovative AI-driven assistant designed to seamlessly integrat
 
 ## Getting Started
 
-(Add instructions for setting up the development environment)
+1. Clone the repository:
+    ``` bash
+    git clone https://github.com/giqua/consultAIng.git cd ConsultAIng
+    ```
+
+
+2. Create a virtual environment and install dependencies:
+    ``` bash
+    python -m venv venv source venv/bin/activate
+    pip install -r requirements.txt
+    ```
+3. Set up a Slack App:
+    - Click "Create New App"
+    - Choose "From an app manifest"
+    - Select your workspace
+    - Copy the contents of `slack_manifest.yaml` into the manifest editor
+    - Review and create the app
+
+4. Install the app to your workspace:
+    - After creating the app, go to "Install App" in the sidebar
+    - Click "Install to Workspace" and authorize the app
+
+5. Get your app tokens:
+    - In "OAuth & Permissions", copy the "Bot User OAuth Token"
+    - In "Basic Information" > "App-Level Tokens", create a new token with the `connections:write` scope
+    - Copy the generated App-Level Token
+
+5. Set up OpenAI API:
+    - Go to https://platform.openai.com/ and create an account
+    - Generate an API key
+
+6. Create a `.env` file in the project root with the following content:
+    ``` .env
+    OPENAI_API_KEY=your_openai_api_key 
+    SLACK_BOT_TOKEN=your_slack_bot_token 
+    SLACK_APP_TOKEN=your_slack_app_token
+    ```
+## Usage
+
+- In Slack, invite the bot to a channel
+- Mention the bot in a channel or send a direct message to interact with it
+- The bot will respond to your messages using AI-generated responses
+
+## Extending the Bot
+
+To add new features or modify the bot's behavior, edit the `agent/core.py` and `chat_integration/slack_bot.py` files.
 
 ## Contributing
 
