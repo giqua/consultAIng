@@ -102,8 +102,7 @@ class SlackBot:
         projects = self.context_manager.list_projects()
         if not projects:
             say("No existing projects found. Let's create a new one.")
-            self.setup_states[user_id] = {"step": "project_name"}
-            say("What's the name of your new project?")
+            self.start_new_project_setup(user_id, say)
             return
 
         options = [
@@ -145,44 +144,66 @@ class SlackBot:
             say("There's no active setup process to cancel.")
 
     def handle_setup_response(self, user_id, text, say):
+    # Log the start of the function
         logger.info(f"Handling setup response for user {user_id}")
         if text.lower() == "cancel":
+        # Handle cancellation request
+            logger.info(f"User {user_id} requested to cancel setup")
             self.cancel_setup_process(user_id, say)
         else:
             state = self.setup_states[user_id]
             if state["step"] == "confirm_delete":
+                logger.info(f"Processing delete confirmation for user {user_id}")
                 if text.lower() == "yes":
                     if self.context_manager.current_project:
                         project_name = self.context_manager.current_project
+                        logger.info(f"Deleting context for project '{project_name}'")
                         self.context_manager.delete_context(project_name)
                         say(f"Context for project '{project_name}' has been deleted.")
                     else:
+                        logger.info("Cancelling setup process and deleting temporary context")
                         say("Setup process cancelled and temporary context deleted.")
                     del self.setup_states[user_id]
                 elif text.lower() == "no":
+                    logger.info("User cancelled deletion")
                     say("Deletion cancelled. Your context remains unchanged.")
                     del self.setup_states[user_id]
                 else:
+                    logger.info("Invalid response for delete confirmation")
                     say("Please respond with 'Yes' or 'No'.")
                 return
+
+        # Handle setup questions
             elif state["step"] == "setup":
                 question = state["questions"][state["current_question"]]
                 param_path = f"{question['type']}.{question['field']}" if question['type'] else question['field']
                 
+                logger.info(f"Processing setup question: {param_path}")
+            
+            # Set project name if applicable
                 if param_path == "project.name":
+                    logger.info(f"Setting project name to: {text}")
                     self.context_manager.current_project = text
                 
+                # Set parameter in context manager
+                logger.info(f"Setting parameter {param_path} to: {text}")
                 self.context_manager.set_param(param_path, text)
                 state["current_question"] += 1
                 
                 if state["current_question"] < len(state["questions"]):
+                    logger.info("Moving to next setup question")
                     self.ask_next_question(user_id, say)
                 else:
+                    logger.info("Setup questions completed")
                     self.finish_setup(user_id, say)
+
+        # Handle setting remote URL
             elif state["step"] == "set_remote_url":
+                logger.info(f"Setting remote URL to: {text}")
                 self.context_manager.set_param('version_control.remote_url', text)
                 del self.setup_states[user_id]
                 say(f"Remote URL set to: {text}")
+                logger.info("Initiating repository clone")
                 self.perform_repository_clone(say)
 
     def ask_next_question(self, user_id, say):
