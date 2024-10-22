@@ -1,0 +1,71 @@
+{
+    "project": {
+      "name": {
+        "value": null,
+        "question": "What is the name of your project?"
+      },
+      "description": {
+        "value": null,
+        "question": "Please provide a brief description of your project:"
+      }
+    },
+    "stack": {
+      "languages": {
+        "primary": {
+          "value": null,
+          "question": "What's the primary programming language for this project?"
+        },
+        "secondary": {
+          "value": [],
+          "question": "Are there any secondary languages? (comma-separated if multiple)"
+        }
+      },
+      "frontend": {
+        "framework": {
+          "value": null,
+          "question": "What frontend framework are you using? (if any)"
+        }
+      },
+      "backend": {
+        "framework": {
+          "value": null,
+          "question": "What backend framework are you using? (if any)"
+        },
+        "database": {
+          "value": null,
+          "question": "What database are you using? (if any)"
+        }
+      }
+    },
+    "code_style": {
+      "guide": {
+        "value": null,
+        "question": "What code style guide are you following? (e.g., PEP 8 for Python)"
+      },
+      "max_line_length": {
+        "value": null,
+        "question": "What's the maximum line length for your code?"
+      },
+      "indentation": {
+        "value": null,
+        "question": "What's your preferred indentation? (e.g., '4 spaces', '2 tabs')"
+      }
+    },
+    "version_control": {
+      "platform": {
+        "value": null,
+        "question": "What version control platform are you using? (e.g., GitHub, GitLab)"
+      },
+      "remote_url": {
+        "value": null,
+        "question": "What's the URL of your remote repository?"
+      }
+    },
+    "testing": {
+      "framework": {
+        "value": null,
+        "question": "What testing framework are you using?"
+      }
+    }
+  }
+  

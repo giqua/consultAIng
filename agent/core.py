@@ -24,13 +24,16 @@ class ConsultAIAgent:
             logger.error(f"Error initializing OpenAI client: {e}")
             raise
 
-    def process_message(self, message):
+    def process_message(self, message, context=None):
         logger.info(f"Processing message: {message[:50]}...")  # Log first 50 chars of message
         try:
+            system_message = "You are a helpful AI assistant for software developers."
+            if context:
+                system_message += f" The current project context is: {context}"
             response = self.client.chat.completions.create(
                 model=os.environ["OPENAI_MODEL"],
                 messages=[
-                    {"role": "system", "content": "You are a helpful AI assistant for software developers."},
+                    {"role": "system", "content": system_message},
                     {"role": "user", "content": message}
                 ]
             )
