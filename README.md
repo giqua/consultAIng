@@ -30,7 +30,7 @@ ConsultAIng is an innovative AI-driven assistant designed to seamlessly integrat
 
 2. Create a virtual environment and install dependencies:
     ``` bash
-    python -m venv venv source venv/bin/activate
+    python -m venv source venv/bin/activate
     pip install -r requirements.txt
     ```
 3. Set up a Slack App:
@@ -73,6 +73,16 @@ ConsultAIng is an innovative AI-driven assistant designed to seamlessly integrat
     ``` bash
     python run_agent.py
     ```
+
+## GitHub Integration
+
+ConsultAIng includes features that integrate with GitHub. To set up the GitHub integration:
+
+1. You'll need to create a GitHub Personal Access Token.
+2. Add the token to your environment variables.
+
+For detailed instructions on how to set up the GitHub integration, please refer to our [GitHub Setup Guide](GITHUB_SETUP.md).
+
 
 ## Usage
 
