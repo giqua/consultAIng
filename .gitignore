@@ -7,6 +7,8 @@ env/
 venv/
 *.egg-info/
 
+source
+
 # JavaScript
 node_modules/
 npm-debug.log
