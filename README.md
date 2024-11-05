@@ -90,6 +90,9 @@ ConsultAIng now supports the following GitHub operations:
 - Cloning repositories
 - Listing branches in a repository
 - Creating new branches
+- Staging changes
+- Committing changes
+- Pushing changes to remote repository
 
 ## Usage
 

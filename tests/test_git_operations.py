@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 import os
 from github import Github
 from github.GithubException import BadCredentialsException, UnknownObjectException
-from agent.git_operations import initialize_github_client, list_branches, create_new_branch, clone_repository
+from agent.git_operations import stage_changes, commit_changes, push_changes, initialize_github_client, list_branches, create_new_branch, clone_repository
 
 class TestFileOperations(unittest.TestCase):
 
@@ -122,6 +122,80 @@ class TestFileOperations(unittest.TestCase):
         self.assertTrue(result.endswith('test_project'))
         print("test_clone_repository passed")
 
+
+    @patch('agent.git_operations.Repo')
+    def test_stage_changes_all(self, mock_repo):
+        mock_instance = MagicMock()
+        mock_repo.return_value = mock_instance
+
+        result = stage_changes('/fake/path')
+
+        mock_instance.git.add.assert_called_once_with(A=True)
+        self.assertTrue(result)
+        print("test_stage_changes_all passed")
+
+    @patch('agent.git_operations.Repo')
+    def test_stage_changes_specific_files(self, mock_repo):
+        mock_instance = MagicMock()
+        mock_repo.return_value = mock_instance
+
+        files = ['file1.txt', 'file2.py']
+        result = stage_changes('/fake/path', files)
+
+        mock_instance.index.add.assert_called_once_with(files)
+        self.assertTrue(result)
+        print("test_stage_changes_specific_files passed")
+    
+    @patch('agent.git_operations.Repo')
+    def test_commit_changes(self, mock_repo):
+        mock_instance = MagicMock()
+        mock_repo.return_value = mock_instance
+
+        commit_message = "Test commit"
+        result = commit_changes('/fake/path', commit_message)
+
+        mock_instance.index.commit.assert_called_once_with(commit_message)
+        self.assertTrue(result)
+        print("test_commit_changes passed")
+    
+    @patch('agent.git_operations.Repo')
+    def test_push_changes(self, mock_repo):
+        mock_instance = MagicMock()
+        mock_repo.return_value = mock_instance
+
+        mock_remote = MagicMock()
+        mock_instance.remote.return_value = mock_remote
+
+        result = push_changes('/fake/path', 'origin', 'main')
+
+        mock_instance.remote.assert_called_once_with(name='origin')
+        mock_remote.push.assert_called_once_with(refspec='main:main')
+        self.assertTrue(result)
+        print("test_push_changes passed")
+    
+    @patch('agent.git_operations.Repo')
+    def test_stage_changes_exception(self, mock_repo):
+        mock_repo.side_effect = Exception("Git error")
+
+        with self.assertRaises(RuntimeError):
+            stage_changes('/fake/path')
+        print("test_stage_changes_exception passed")
+    
+    @patch('agent.git_operations.Repo')
+    def test_commit_changes_exception(self, mock_repo):
+        mock_repo.side_effect = Exception("Git error")
+
+        with self.assertRaises(RuntimeError):
+            commit_changes('/fake/path', "Test commit")
+        print("test_commit_changes_exception passed")
+
+    @patch('agent.git_operations.Repo')
+    def test_push_changes_exception(self, mock_repo):
+        mock_repo.side_effect = Exception("Git error")
+
+        with self.assertRaises(RuntimeError):
+            push_changes('/fake/path')
+        print("test_push_changes_exception passed")
 
 if __name__ == '__main__':
     unittest.main()

@@ -15,6 +15,9 @@
 - Cloning repositories
 - Listing branches
 - Creating new branches
+- Staging changes
+- Committing changes
+- Pushing changes to remote repository
 
 ## Considerations
 
@@ -70,6 +73,11 @@
 6. Expand GitHub Integration
    - Implement more advanced GitHub operations (e.g., pull requests, code review automation)
    - Integrate GitHub operations with other bot features
+
+7. Enhance Git Operations
+   - Implement pull request creation and management
+   - Add support for merge conflict resolution
+   - Implement branch switching functionality
 
 ## Immediate Action Items
 - Create detailed requirements document
