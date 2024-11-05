@@ -6,7 +6,7 @@ import os
 import logging
 from agent.context_manager import ContextManager
 import threading
-import agent.file_operations as file_operations
+import agent.git_operations as git_operations
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -253,7 +253,7 @@ class SlackBot:
     
     def perform_repository_clone(self, project_name, remote_url, say):
         try:
-            result = file_operations.clone_repository(project_name, remote_url)
+            result = git_operations.clone_repository(project_name, remote_url)
             say(f"Repository cloned successfully. {result}")
         except (ValueError, FileExistsError, RuntimeError) as e:
             say(f"Error cloning repository: {str(e)}")

@@ -12,7 +12,7 @@ ConsultAIng is an innovative AI-driven assistant designed to seamlessly integrat
 - **Documentation Support**: Automatically generate and update code documentation and README files.
 - **Testing Aide**: Get suggestions for test cases and auto-generated unit and integration tests.
 - **Project Management Integration**: Manage tasks, track project status, and assist with sprint planning.
-- **Version Control Support**: Seamlessly integrate with GitHub for commit messages, pull requests, and code merging.
+- **Version Control Support**: Seamlessly integrate with GitHub for commit messages, pull requests, code merging and basic repository operations.
 - **Team Onboarding**: Provide project-specific information and best practices to new team members.
 
 ## Project Structure
@@ -83,6 +83,13 @@ ConsultAIng includes features that integrate with GitHub. To set up the GitHub i
 
 For detailed instructions on how to set up the GitHub integration, please refer to our [GitHub Setup Guide](GITHUB_SETUP.md).
 
+### GitHub Operations
+
+ConsultAIng now supports the following GitHub operations:
+
+- Cloning repositories
+- Listing branches in a repository
+- Creating new branches
 
 ## Usage
 

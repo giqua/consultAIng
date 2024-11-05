@@ -3,12 +3,12 @@ from unittest.mock import patch, MagicMock
 import os
 from github import Github
 from github.GithubException import BadCredentialsException, UnknownObjectException
-from agent.file_operations import initialize_github_client
+from agent.git_operations import initialize_github_client, list_branches, create_new_branch, clone_repository
 
 class TestFileOperations(unittest.TestCase):
 
     @patch.dict(os.environ, {'GITHUB_TOKEN': 'dummy_token'})
-    @patch('agent.file_operations.Github')
+    @patch('agent.git_operations.Github')
     def test_initialize_github_client_success(self, mock_github):
         mock_user = MagicMock()
         mock_user.login = 'test_user'
@@ -31,7 +31,7 @@ class TestFileOperations(unittest.TestCase):
         print("test_initialize_github_client_no_token passed")
 
     @patch.dict(os.environ, {'GITHUB_TOKEN': 'invalid_token'})
-    @patch('agent.file_operations.Github')
+    @patch('agent.git_operations.Github')
     def test_initialize_github_client_invalid_credentials(self, mock_github):
         mock_github.return_value.get_user.side_effect = BadCredentialsException(status=401, data={}, headers={})
         
@@ -42,7 +42,7 @@ class TestFileOperations(unittest.TestCase):
         print("test_initialize_github_client_invalid_credentials passed")
 
     @patch.dict(os.environ, {'GITHUB_TOKEN': 'valid_token_no_permissions'})
-    @patch('agent.file_operations.Github')
+    @patch('agent.git_operations.Github')
     def test_initialize_github_client_insufficient_permissions(self, mock_github):
         mock_user = MagicMock()
         mock_user.login = 'test_user'
@@ -56,7 +56,7 @@ class TestFileOperations(unittest.TestCase):
         print("test_initialize_github_client_insufficient_permissions passed")
 
     @patch.dict(os.environ, {'GITHUB_TOKEN': 'valid_token'})
-    @patch('agent.file_operations.Github')
+    @patch('agent.git_operations.Github')
     def test_initialize_github_client_unknown_object(self, mock_github):
         mock_github.return_value.get_user.side_effect = UnknownObjectException(status=404, data={}, headers={})
         
@@ -66,6 +66,62 @@ class TestFileOperations(unittest.TestCase):
         self.assertIn('Unable to retrieve user information. Check token permissions', str(context.exception))
         print("test_initialize_github_client_unknown_object passed")
 
+    @patch('agent.git_operations.initialize_github_client')
+    def test_list_branches(self, mock_init_client):
+        mock_client = MagicMock()
+        mock_repo = MagicMock()
+        mock_branch1 = MagicMock()
+        mock_branch1.name = 'main'
+        mock_branch2 = MagicMock()
+        mock_branch2.name = 'develop'
+        mock_repo.get_branches.return_value = [mock_branch1, mock_branch2]
+        mock_client.get_repo.return_value = mock_repo
+        mock_init_client.return_value = mock_client
+
+        branches = list_branches('test/repo')
+        
+        self.assertEqual(branches, ['main', 'develop'])
+        mock_client.get_repo.assert_called_once_with('test/repo')
+        mock_repo.get_branches.assert_called_once()
+        print("test_list_branches passed")
+
+    @patch('agent.git_operations.initialize_github_client')
+    def test_create_new_branch(self, mock_init_client):
+        mock_client = MagicMock()
+        mock_repo = MagicMock()
+        mock_base_branch = MagicMock()
+        mock_base_branch.commit.sha = 'base_commit_sha'
+        mock_repo.get_branch.return_value = mock_base_branch
+        mock_client.get_repo.return_value = mock_repo
+        mock_init_client.return_value = mock_client
+
+        result = create_new_branch('test/repo', 'main', 'new-feature')
+        
+        self.assertTrue(result)
+        mock_client.get_repo.assert_called_once_with('test/repo')
+        mock_repo.get_branch.assert_called_once_with('main')
+        mock_repo.create_git_ref.assert_called_once_with('refs/heads/new-feature', 'base_commit_sha')
+        print("test_create_new_branch passed")
+
+    @patch('agent.git_operations.initialize_github_client')
+    @patch('agent.git_operations.Repo.clone_from')
+    @patch('agent.git_operations.os.path.exists')
+    def test_clone_repository(self, mock_exists, mock_clone_from, mock_init_client):
+        mock_exists.return_value = False
+        mock_repo = MagicMock()
+        mock_repo.clone_url = 'https://github.com/test/repo.git'
+        mock_client = MagicMock()
+        mock_client.get_repo.return_value = mock_repo
+        mock_init_client.return_value = mock_client
+
+        result = clone_repository('test/repo', 'test_project')
+
+        mock_init_client.assert_called_once()
+        mock_client.get_repo.assert_called_with('test/repo')
+        mock_clone_from.assert_called_with('https://github.com/test/repo.git', result)
+        self.assertTrue(result.endswith('test_project'))
+        print("test_clone_repository passed")
+
 
 if __name__ == '__main__':
-    unittest.main(verbosity=2)
+    unittest.main()
