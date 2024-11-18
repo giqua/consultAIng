@@ -34,3 +34,8 @@ Thumbs.db
 
 # Env files
 *.env
+
+# Ignore all JSON files in the contexts folder
+contexts/*.json
+# Ignore the entire consultAIng folder
+/consultAIng/
