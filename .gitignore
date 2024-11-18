@@ -39,3 +39,4 @@ Thumbs.db
 contexts/*.json
 # Ignore the entire consultAIng folder
 /consultAIng/
+contexts/consultAIng.json
