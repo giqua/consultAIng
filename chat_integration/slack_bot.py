@@ -251,9 +251,9 @@ class SlackBot:
             # Log the completion of the function
             logger.info("Repository clone process completed")
     
-    def perform_repository_clone(self, project_name, remote_url, say):
+    def perform_repository_clone(self,project_name, remote_url, say):
         try:
-            result = git_operations.clone_repository(project_name, remote_url)
+            result = git_operations.clone_repository(project_name, remote_url, self.context_manager)
             say(f"Repository cloned successfully. {result}")
         except (ValueError, FileExistsError, RuntimeError) as e:
             say(f"Error cloning repository: {str(e)}")

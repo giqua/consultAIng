@@ -15,6 +15,32 @@ class ContextManager:
         os.makedirs(storage_dir, exist_ok=True)
         self.context_template = self.load_template()
 
+    def update_github_context(self, repo_name, branch, remote_url):
+        if 'version_control' not in self.current_context:
+            self.current_context['version_control'] = {}
+        
+        self.current_context['version_control']['platform'] = 'GitHub'
+        self.current_context['version_control']['repo_name'] = repo_name
+        self.current_context['version_control']['current_branch'] = branch
+        self.current_context['version_control']['remote_url'] = remote_url
+        
+        self.save_context()
+        logger.info(f"Updated GitHub context for project: {self.current_project}")
+    
+    def get_github_context(self):
+        return self.current_context.get('version_control', {})
+
+    def clear_github_context(self):
+        if 'version_control' in self.current_context:
+            self.current_context['version_control'] = {
+                'platform': None,
+                'repo_name': None,
+                'current_branch': None,
+                'remote_url': None
+            }
+            self.save_context()
+            logger.info(f"Cleared GitHub context for project: {self.current_project}")
+
     def load_template(self):
         try:
             with open(self.template_file, 'r') as f:

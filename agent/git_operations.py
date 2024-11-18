@@ -5,6 +5,8 @@ from github import Github
 from github.GithubException import BadCredentialsException, UnknownObjectException
 from git import Repo
 from git.exc import GitCommandError
+from agent.context_manager import ContextManager
+
 
 
 
@@ -24,9 +26,13 @@ def initialize_github_client():
         # Validate token by attempting to fetch the authenticated user
         user = client.get_user()
         logger.info(f"Authenticated as GitHub user: {user.login}")
+
+        # Attempt to list repositories to check permissions
+        repos = list(user.get_repos())
+        logger.info(f"Token can access {len(repos)} repositories")
         
-        # Check token permissions (example: check if it has repo access)
-        if not user.has_repo_scope():
+        # You can still keep your specific checks if needed
+        if len(repos) == 0:
             logger.warning("GitHub token does not have required repository permissions")
             raise ValueError("GitHub token does not have required repository permissions")
     except BadCredentialsException:
@@ -38,24 +44,52 @@ def initialize_github_client():
     
     return client
 
-def clone_repository(repo_name, project_name):
+def get_repository_by_name(repo_name):
     client = initialize_github_client()
     try:
-        repo = client.get_repo(repo_name)
-        clone_url = repo.clone_url
+        user = client.get_user()
+        for repo in user.get_repos():
+            if repo_name.lower() in repo.full_name.lower():
+                logger.info(f"Found repository: {repo.full_name}")
+                return repo
+        logger.warning(f"No repository found containing '{repo_name}' in its name")
+        return None
+    except Exception as e:
+        logger.error(f"Failed to find repository containing '{repo_name}': {str(e)}")
+        raise RuntimeError(f"Failed to find repository: {str(e)}")
+
+
+def clone_repository(project_name, remote_url, context_manager):
+    try:
         clone_path = os.path.join(DEFAULT_PROJECTS_PATH, project_name)
 
         if os.path.exists(clone_path):
             raise FileExistsError(f"Directory {clone_path} already exists.")
 
-        Repo.clone_from(clone_url, clone_path)
-        logger.info(f"Repository {repo_name} cloned successfully to {clone_path}")
-        return clone_path
+        if not(os.path.exists(DEFAULT_PROJECTS_PATH)):
+            logger.info(f"Creating projects directory: {DEFAULT_PROJECTS_PATH}")
+            os.makedirs(DEFAULT_PROJECTS_PATH)
+            logger.info(f"Created projects directory: {DEFAULT_PROJECTS_PATH}")
+
+        logger.info(f"Cloning repository {remote_url} to {clone_path}")
+        # Clone the repository
+        cloned_repo = Repo.clone_from(remote_url, clone_path)
+        repo_name = cloned_repo.working_dir.split('/')[-1]
+
+        # Aggiorna il contesto dopo il clone della repository
+        context_manager.update_github_context(
+            repo_name=repo_name,
+            branch=cloned_repo.active_branch.name,
+            remote_url=remote_url
+        )
+        context_manager.save_context()
+        logger.info(f"Repository {repo_name} cloned successfully to {cloned_repo.working_dir}")
+        return cloned_repo.working_dir
     except GitCommandError as e:
-        logger.error(f"Failed to clone repository {repo_name}: {str(e)}")
+        logger.error(f"Failed to clone repository {remote_url}: {str(e)}")
         raise RuntimeError(f"Failed to clone repository: {str(e)}")
     except Exception as e:
-        logger.error(f"An error occurred while cloning repository {repo_name}: {str(e)}")
+        logger.error(f"An error occurred while cloning repository {remote_url}: {str(e)}")
         raise RuntimeError(f"An error occurred while cloning repository: {str(e)}")
     
 def list_branches(repo_name):
@@ -69,12 +103,21 @@ def list_branches(repo_name):
         logger.error(f"Failed to list branches for repository {repo_name}: {str(e)}")
         raise RuntimeError(f"Failed to list branches: {str(e)}")
 
-def create_new_branch(repo_name, base_branch, new_branch_name):
+def create_new_branch(repo_name, base_branch, new_branch_name, context_manager):
     client = initialize_github_client()
     try:
         repo = client.get_repo(repo_name)
         base = repo.get_branch(base_branch)
         repo.create_git_ref(f"refs/heads/{new_branch_name}", base.commit.sha)
+        # Aggiorna il contesto dopo la creazione del nuovo branch
+        github_context = context_manager.get_github_context()
+        if github_context.get('repo_name') == repo_name:
+            context_manager.update_github_context(
+                repo_name=repo_name,
+                branch=new_branch_name,
+                remote_url=github_context.get('remote_url')
+            )
+            context_manager.save_context()
         logger.info(f"Created new branch '{new_branch_name}' in repository {repo_name}")
         return True
     except Exception as e:
