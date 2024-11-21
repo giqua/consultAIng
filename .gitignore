@@ -40,3 +40,5 @@ contexts/*.json
 # Ignore the entire consultAIng folder
 /consultAIng/
 contexts/consultAIng.json
+
+general_context/
