@@ -5,10 +5,6 @@ from github import Github
 from github.GithubException import BadCredentialsException, UnknownObjectException
 from git import Repo
 from git.exc import GitCommandError
-from agent.context_manager import ContextManager
-
-
-
 
 logger = logging.getLogger(__name__)
 DEFAULT_PROJECTS_PATH = os.environ["PROJECTS_PATH"] if "PROJECTS_PATH" in os.environ else os.path.join(os.getcwd(), "projects")

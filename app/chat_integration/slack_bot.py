@@ -3,7 +3,7 @@
 import os
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
-from agent.graph.agent_graph import LangGraphAgent
+from app.agent.graph.agent_graph import LangGraphAgent
 import logging
 
 logging.basicConfig(level=logging.INFO)

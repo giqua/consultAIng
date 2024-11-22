@@ -1,7 +1,7 @@
 from typing import Dict, List
 from langgraph.graph import StateGraph, MessagesState, START
-from agent.nodes.supervisor_node import get_supervisor_node, get_supervisor_node_name
-from agent.nodes.general_context_node import context_node, get_context_node_name
+from app.agent.nodes.supervisor_node import get_supervisor_node, get_supervisor_node_name
+from app.agent.nodes.general_context_node import context_node, get_context_node_name
 
 class LangGraphAgent:
     def __init__(self):

@@ -52,6 +52,7 @@ def create_general_context_db() -> Annotated[str,"Stringa di validazione della c
     else:
         return f"DB already exists at {db_path}"
 
+@tool("add_projects_to_general_context_db", args_schema=CreateGeneralProjectsInput)
 def add_projects_to_general_context_db(projects: List[GeneralProjectInfo]) -> str:
     """
     Aggiunge progetti al DB per i Progetti Generici
@@ -87,13 +88,7 @@ def add_projects_to_general_context_db(projects: List[GeneralProjectInfo]) -> st
         conn.close()
     return f"Projects {[project.name for project in projects]} added to the DB."
 
-
-add_projects_tool = StructuredTool.from_function(
-    func=add_projects_to_general_context_db,
-    name="add_projects_to_general_context_db",
-    description="Aggiunge progetti al DB per i Progetti Generici",
-    args_schema=CreateGeneralProjectsInput)
-
+@tool("add_project_to_general_context_db", args_schema=GeneralProjectInfo)
 def add_project_to_general_context_db(name: str, description: str) -> str:
     """
     Aggiunge il progetto al DB per i Progetti Generici
@@ -130,12 +125,6 @@ def add_project_to_general_context_db(name: str, description: str) -> str:
         conn.close()
 
     return f"Project {name} added to the DB."
-
-add_project_tool = StructuredTool.from_function(
-    func=add_project_to_general_context_db,
-    name="add_project_to_general_context_db",
-    description="Aggiunge il progetto al DB per i Progetti Generici",
-    args_schema=GeneralProjectInfo)
 
 @tool
 def list_all_projects_in_general_db() -> Annotated[List[str],"Nomi dei progetti presenti nel db"]:
@@ -238,5 +227,5 @@ def delete_project_in_general_db(project_name: Annotated[str, "Nome del progetto
     return f"Progetto {project_name} cancellato con successo"
 
 def get_general_context_tools():
-    return [create_general_context_db, add_projects_tool, add_project_tool, list_all_projects_in_general_db, select_project_in_general_db , delete_project_in_general_db]
+    return [create_general_context_db, add_projects_to_general_context_db, add_project_to_general_context_db, list_all_projects_in_general_db, select_project_in_general_db , delete_project_in_general_db]
 

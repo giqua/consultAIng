@@ -2,8 +2,8 @@
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
-from agent.tools.general_context_tools import get_general_context_tools
-from agent.state.agent_state import AgentState
+from app.agent.tools.general_context_tools import get_general_context_tools
+from app.agent.state.agent_state import AgentState
 
 llm = ChatOpenAI(model="gpt-4o-mini")
 

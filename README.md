@@ -71,7 +71,7 @@ ConsultAIng is an innovative AI-driven assistant designed to seamlessly integrat
 
 9. Run the Slack bot:
     ``` bash
-    python run_agent.py
+    python main.py
     ```
 
 ## GitHub Integration

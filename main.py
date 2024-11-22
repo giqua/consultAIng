@@ -1,5 +1,3 @@
-# /Users/giovanniquadraroli/Projects/LittleSquare/consultAIng/run_agent.py
-
 import sys
 import os
 import signal
@@ -7,7 +5,7 @@ import signal
 # Add the project root directory to Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from chat_integration.slack_bot_lngch import SlackBot
+from app.chat_integration.slack_bot import SlackBot
 
 def signal_handler(signum, frame):
     print("\nReceived signal to exit. Shutting down gracefully...")
