@@ -3,8 +3,8 @@ from typing import Annotated, List
 from langchain_core.tools import tool
 import os
 from typing import List
-from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
+import json
 
 class GeneralProjectInfo(BaseModel):
     name: str = Field(description="Name of the project, if it's not present leave it blank and ask user input")
@@ -15,8 +15,14 @@ class GeneralProjectInfo(BaseModel):
 class CreateGeneralProjectsInput(BaseModel):
     projects: List[GeneralProjectInfo] = Field(description="List of projects to create")
 
+class ContextStateOutput(BaseModel):
+    project_name: str = Field(description="Name of the project", default="")
+    project_description: str = Field(description="Description of the project", default="")
+    project_additional_info: str = Field(description="Additional info about the project", default="")
+    response: str = Field(description="Response to the user", default="")
+
 @tool
-def create_general_context_db() -> Annotated[str,"Stringa di validazione della creazione del Vector Store"]:
+def create_general_context_db() -> Annotated[ContextStateOutput,"Oggetto di stato del contesto"]:
     """
     Crea il SQL DB per i Progetti Generici se non esistente
     
@@ -26,6 +32,7 @@ def create_general_context_db() -> Annotated[str,"Stringa di validazione della c
     persist_directory = os.environ.get("GENERAL_CONTEXT_DB_PATH")
     db_name = os.environ.get("GENERAL_CONTEXT_DB_NAME")
     db_path = os.path.join(persist_directory, db_name)
+    output = ContextStateOutput(response="")
     if not os.path.exists(persist_directory):
         os.makedirs(persist_directory)
     
@@ -40,7 +47,8 @@ def create_general_context_db() -> Annotated[str,"Stringa di validazione della c
                         name TEXT UNIQUE NOT NULL,
                         description TEXT NOT NULL,
                         vector_store_type TEXT, -- Tipo di vector store (es. FAISS, ChromaDB)
-                        vector_store_path TEXT -- Percorso o URI del vector store
+                        vector_store_path TEXT, -- Percorso o URI del vector store
+                        additional_info TEXT -- Campo JSON per informazioni aggiuntive
                     )
                     ''')
             conn.commit()
@@ -48,12 +56,14 @@ def create_general_context_db() -> Annotated[str,"Stringa di validazione della c
             print(f"Error creating table: {e}")
         finally:
             conn.close()
-        return f"DB created at path {db_path}"
+        output.response = f"DB created at path {db_path}"
+        return output
     else:
-        return f"DB already exists at {db_path}"
+        output.response = f"DB already exists at {db_path}"
+        return output
 
 @tool("add_projects_to_general_context_db", args_schema=CreateGeneralProjectsInput)
-def add_projects_to_general_context_db(projects: List[GeneralProjectInfo]) -> str:
+def add_projects_to_general_context_db(projects: List[GeneralProjectInfo]) -> Annotated[ContextStateOutput,"Oggetto di stato del contesto"]:
     """
     Aggiunge progetti al DB per i Progetti Generici
     
@@ -65,31 +75,41 @@ def add_projects_to_general_context_db(projects: List[GeneralProjectInfo]) -> st
     """
     if not projects:
         raise Exception("Nessun progetto fornito")
-    
+    output = ContextStateOutput(response="")
     persist_directory = os.environ.get("GENERAL_CONTEXT_DB_PATH")
     db_name = os.environ.get("GENERAL_CONTEXT_DB_NAME")
     db_path = os.path.join(persist_directory, db_name)
+    file_path = os.environ.get("GENERAL_PROJECT_INFO_TEMPLATE_PATH")
+    with open(file_path, 'r') as file:
+        additional_info_json = json.load(file)
+
+    additional_info_string = json.dumps(additional_info_json)
     if not os.path.exists(persist_directory) or not os.path.exists(db_path):
         raise Exception("Database non esistente")
 
     # Connessione al database
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
-
-    projs=[(project.name, project.description) for project in projects]
+    projs = []
+    for proj in projects:
+        additional_info_json["project"]["name"]["value"] = proj.name
+        additional_info_json["project"]["description"]["value"] = proj.description
+        projs.append((proj.name, proj.description, json.dumps(additional_info_json)))
+    # projs=[(project.name, project.description,additional_info_string) for project in projects]
     # Inserimento dei progetti nel database
     try:
-        c.executemany('INSERT INTO projects (name,description) VALUES (?, ?)', projs)
+        c.executemany('INSERT INTO projects (name,description,additional_info) VALUES (?, ?, ?)', projs)
         conn.commit()
     except Exception as e:
         conn.rollback()  # Annulla la transazione in caso di errore
         raise Exception(f"Error while inserting projects in common DB", e)
     finally:
         conn.close()
-    return f"Projects {[project.name for project in projects]} added to the DB."
+    output.response = f"Projects {[project.name for project in projects]} added to the DB."
+    return output
 
 @tool("add_project_to_general_context_db", args_schema=GeneralProjectInfo)
-def add_project_to_general_context_db(name: str, description: str) -> str:
+def add_project_to_general_context_db(name: str, description: str) -> Annotated[ContextStateOutput,"Oggetto di stato del contesto"]:
     """
     Aggiunge il progetto al DB per i Progetti Generici
     
@@ -102,7 +122,7 @@ def add_project_to_general_context_db(name: str, description: str) -> str:
     """
     if not name or not description:
         raise Exception("Project initialization requires a Name and a Description")
-    
+    output = ContextStateOutput(response="")
     persist_directory = os.environ.get("GENERAL_CONTEXT_DB_PATH")
     db_name = os.environ.get("GENERAL_CONTEXT_DB_NAME")
     db_path = os.path.join(persist_directory, db_name)
@@ -112,28 +132,35 @@ def add_project_to_general_context_db(name: str, description: str) -> str:
     # Connessione al database
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
+    file_path = os.environ.get("GENERAL_PROJECT_INFO_TEMPLATE_PATH")
+    with open(file_path, 'r') as file:
+        additional_info_json = json.load(file)
 
-    proj=(name, description)
+    additional_info_json["project"]["name"]["value"] = name
+    additional_info_json["project"]["description"]["value"] = description
+    additional_info_string = json.dumps(additional_info_json)
+    proj=(name, description, additional_info_string)
     # Inserimento dei progetti nel database
     try:
-        c.execute('INSERT INTO projects (name,description) VALUES (?, ?)', proj)
+        c.execute('INSERT INTO projects (name,description, additional_info) VALUES (?, ?, ?)', proj)
         conn.commit()
     except Exception as e:
         conn.rollback()  # Annulla la transazione in caso di errore
         raise Exception(f"Error while inserting projects in common DB", e)
     finally:
         conn.close()
-
-    return f"Project {name} added to the DB."
+    output.response = f"Project {name} added to the DB."
+    return output
 
 @tool
-def list_all_projects_in_general_db() -> Annotated[List[str],"Nomi dei progetti presenti nel db"]:
+def list_all_projects_in_general_db() -> Annotated[ContextStateOutput,"Oggetto di stato del contesto"]:
     """
     Restituisce i nomi dei progetti presenti nel db
     
     Returns:
         List[str]: Nomi dei progetti presenti nel db
     """
+    output = ContextStateOutput()
     persist_directory = os.environ.get("GENERAL_CONTEXT_DB_PATH")
     db_name = os.environ.get("GENERAL_CONTEXT_DB_NAME")
     db_path = os.path.join(persist_directory, db_name)
@@ -151,10 +178,11 @@ def list_all_projects_in_general_db() -> Annotated[List[str],"Nomi dei progetti 
         raise Exception(f"Error while retrieving projects from common DB", e)
     finally:
         conn.close()
-    return [project[0] for project in projects]
+    output.response = ",".join([project[0] for project in projects])
+    return output
 
 @tool
-def select_project_in_general_db(project_name: Annotated[str, "Nome del progetto da selezionare"]) -> Annotated[GeneralProjectInfo,"Progetto selezionato dal DB per i Progetti Generici"]:
+def select_project_in_general_db(project_name: Annotated[str, "Nome del progetto da selezionare"]) -> Annotated[ContextStateOutput,"Oggetto di stato del contesto"]:
     """
     Restituisce il progetto selezionato dal DB per i Progetti Generici
     
@@ -164,6 +192,7 @@ def select_project_in_general_db(project_name: Annotated[str, "Nome del progetto
     Returns:
         GeneralProjectInfo: Progetto selezionato dal DB per i Progetti Generici
     """
+    output = ContextStateOutput()
     persist_directory = os.environ.get("GENERAL_CONTEXT_DB_PATH")
     db_name = os.environ.get("GENERAL_CONTEXT_DB_NAME")
     db_path = os.path.join(persist_directory, db_name)
@@ -187,12 +216,13 @@ def select_project_in_general_db(project_name: Annotated[str, "Nome del progetto
     conn.close()
     if not project:
         raise Exception(f"Project {project_name} not found in common DB")
-
-    result = GeneralProjectInfo(name=project[1], description=project[2], vector_store_type=project[3] if project[3] else "", vector_store_path=project[4] if project[4] else "")
-    return result
+    output.project_name = project[1]
+    output.project_description = project[2]
+    output.project_additional_info = project[5]
+    return output
 
 @tool
-def delete_project_in_general_db(project_name: Annotated[str, "Nome del progetto da cancellare"]) -> Annotated[str,"Validazione della cancellazione del progetto"]:
+def delete_project_in_general_db(project_name: Annotated[str, "Nome del progetto da cancellare"]) -> Annotated[ContextStateOutput,"Oggetto di stato del contesto"]:
     """
     Cancella il progetto selezionato dal DB per i Progetti Generici
     
@@ -203,6 +233,7 @@ def delete_project_in_general_db(project_name: Annotated[str, "Nome del progetto
     Returns:
         str: Validazione della cancellazione del progetto
     """
+    output = ContextStateOutput()
     persist_directory = os.environ.get("GENERAL_CONTEXT_DB_PATH")
     db_name = os.environ.get("GENERAL_CONTEXT_DB_NAME")
     db_path = os.path.join(persist_directory, db_name)
@@ -224,7 +255,8 @@ def delete_project_in_general_db(project_name: Annotated[str, "Nome del progetto
         raise Exception("Errore durante la cancellazione del progetto: " + str(e))
     finally:
         conn.close()
-    return f"Progetto {project_name} cancellato con successo"
+    output.response = f"Progetto {project_name} cancellato con successo"
+    return output
 
 def get_general_context_tools():
     return [create_general_context_db, add_projects_to_general_context_db, add_project_to_general_context_db, list_all_projects_in_general_db, select_project_in_general_db , delete_project_in_general_db]
