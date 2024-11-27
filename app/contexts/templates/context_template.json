@@ -13,7 +13,7 @@
       "languages": {
         "primary": {
           "value": null,
-          "question": "What's the primary programming language for this project?"
+          "question": "What is the primary programming language for this project?"
         },
         "secondary": {
           "value": [],
@@ -44,11 +44,11 @@
       },
       "max_line_length": {
         "value": null,
-        "question": "What's the maximum line length for your code?"
+        "question": "What is the maximum line length for your code?"
       },
       "indentation": {
         "value": null,
-        "question": "What's your preferred indentation? (e.g., '4 spaces', '2 tabs')"
+        "question": "What is your preferred indentation? (e.g., 4 spaces, 2 tabs)"
       }
     },
     "version_control": {
@@ -58,7 +58,7 @@
       },
       "remote_url": {
         "value": null,
-        "question": "What's the URL of your remote repository?"
+        "question": "What is the URL of your remote repository?"
       }
     },
     "testing": {

@@ -1,9 +1,10 @@
 
-from langchain_core.messages import HumanMessage, ToolMessage
+from langchain_core.messages import HumanMessage, ToolMessage, AIMessage
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 from app.agent.tools.general_context_tools import ContextStateOutput, get_general_context_tools
-from app.agent.state.agent_state import AgentState
+from app.agent.state.states import AgentState
+from langgraph.errors import NodeInterrupt
 import logging
 import json
 
@@ -16,7 +17,7 @@ context_agent_prompt = """
 You're a helpful agent that handles the general context of a list of projects. 
 You have a set of tools available to answer the user's questions.
 If you don't know the answer, just say that you don't know, don't try to make up an answer.
-If some required function fields are missing in the user's question, ask the user to provide them, don't create new one
+If some required function fields are missing in the user's question, ask the user a question to provide them, don't create new one.
 """
 
 context_agent = create_react_agent(llm, tools=get_general_context_tools(), state_modifier=context_agent_prompt)
@@ -25,6 +26,11 @@ context_agent_with_structured_output = llm.with_structured_output(ContextStateOu
 def get_context_node(state: AgentState) -> AgentState:
     result = context_agent.invoke(state)
     messages = result["messages"]
+    content = messages[-1].content
+    # if content[-1] == "?":
+    #     raise NodeInterrupt(
+    #         f"Agent is asking a question to the user: {content}"
+    #     )
     tool_message = None
     for message in messages:
         if isinstance(message, ToolMessage):
@@ -49,7 +55,8 @@ def get_context_node(state: AgentState) -> AgentState:
     
     # Aggiungi il messaggio all'elenco dei messaggi
     response["messages"] = [
-            HumanMessage(content=result["messages"][-1].content, name=get_context_node_name())
+            AIMessage(content=content, name=get_context_node_name())
+            # HumanMessage(content=result["messages"][-1].content, name=get_context_node_name())
         ]
     # context_state = ContextStateOutput(**tmp_dict)
     return response
@@ -58,4 +65,4 @@ def get_context_node_name():
     return "general_context_agent"
 
 def get_context_node_description():
-    return "This worker is responsible for managing the general context of a list of projects and is useful if you are not aware of any project. It uses a set of tools to answer user questions. If the answer is not known, it will simply state that it doesn't know. If some required function fields are missing in the user's question, it will ask the user to provide them, instead of creating new ones."
+    return "If you're not aware of any project call this worker to select a project, list the projects available or create a new one. This worker is responsible for managing the general context of a list of projects."

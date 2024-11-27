@@ -1,11 +1,8 @@
 
-from langchain_core.messages import HumanMessage, ToolMessage
+from langchain_core.messages import HumanMessage, ToolMessage, AIMessage
 from langchain_openai import ChatOpenAI
-from langgraph.prebuilt import create_react_agent
-from app.agent.tools.general_context_tools import ContextStateOutput, get_general_context_tools
-from app.agent.state.agent_state import AgentState
+from app.agent.state.states import AgentState
 import logging
-import json
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -28,7 +25,8 @@ def get_project_information_node(state: AgentState) -> AgentState:
     response = {}
     # Aggiungi il messaggio all'elenco dei messaggi
     response["messages"] = [
-            HumanMessage(content, name=get_project_information_node_name())
+            AIMessage(content=content, name=get_project_information_node_name())
+            # HumanMessage(content, name=get_project_information_node_name())
         ]
     # context_state = ContextStateOutput(**tmp_dict)
     return response
@@ -37,4 +35,4 @@ def get_project_information_node_name():
     return "project_information_node"
 
 def get_project_information_description():
-    return "This node is used to answer questions about the current project if you're aware about it. If you're not aware about the project don't call this worker"
+    return "If you're not aware of any project, don't call this worker. This worker is used to answer questions about the current project. "

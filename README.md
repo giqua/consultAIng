@@ -74,6 +74,23 @@ ConsultAIng is an innovative AI-driven assistant designed to seamlessly integrat
     python main.py
     ```
 
+## Debug App Agent
+In order to debug the app agent, you can use LangGraph CLI. To setup the CLI follw the instructions below:
+
+1. Install LangGraph CLI:
+    ``` bash
+    pip install "langgraph-cli[inmem]==0.1.55"
+    ```
+2. Update if required the langgraph.json file.
+3. Setup the .env file with the required variables
+4. Run the server with the following command:
+    ``` bash
+    PYTHONPATH=$(pwd) langgraph dev
+    ```
+
+This command will start a local server to execute you're agent and it will connect to your LangSmith
+account to let you see the graph form LangGraph Studio UI.
+
 ## GitHub Integration
 
 ConsultAIng includes features that integrate with GitHub. To set up the GitHub integration:

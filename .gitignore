@@ -42,3 +42,7 @@ contexts/*.json
 contexts/consultAIng.json
 
 general_context/
+
+tmp/
+
+.langgraph*
