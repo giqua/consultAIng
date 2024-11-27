@@ -42,7 +42,7 @@ class LangGraphAgent:
         return self.agent_builder.compile(checkpointer=self.checkpointer)
     
     def process_message(self, message:str) -> str:
-        config = {"configurable": {"thread_id": "1"}, "recursion_limit": 20}
+        config = {"configurable": {"thread_id": "1", "recursion_limit": 20}}
         agent_input = {"messages": [("user",message)]}
         
         response = self.graph.invoke(agent_input,config)
